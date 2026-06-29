@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, status, HTTPException
+from fastapi import FastAPI, Query, status, HTTPException, Path
 from fastapi.responses import JSONResponse
 import uvicorn
 import random
@@ -31,7 +31,7 @@ def get_all():
     return JSONResponse(content= game_list, status_code= status.HTTP_200_OK)
 
 @app.get("/names/{name_id}")
-def get_single_item(name_id: int):
+def get_single_item(name_id: Annotated[int, Path(alias="item_id", example=2)]):
     for game in game_list:
         if game["id"] == name_id:
             return game 
@@ -39,7 +39,7 @@ def get_single_item(name_id: int):
     raise HTTPException(status_code= status.HTTP_404_NOT_FOUND)
 
 @app.get("/names")
-def search_items(q: Annotated[str | None, Query(min_length=2, max_length=50)] = None):
+def search_items(q: Annotated[str | None, Query(deprecated= True, alias="search", description= "Searches The Word You Provided", example="Grand", min_length=2, max_length=50)] = None):
 
     if q:
         return [item for item in game_list if q in item["name"]]
