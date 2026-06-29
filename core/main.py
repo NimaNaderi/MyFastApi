@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, status, HTTPException
+from fastapi.responses import JSONResponse
 import uvicorn
 import random
 from typing import Annotated
@@ -27,15 +28,15 @@ game_list = [
 
 @app.get("/get_all")
 def get_all():
-    return game_list
+    return JSONResponse(content= game_list, status_code= status.HTTP_200_OK)
 
 @app.get("/names/{name_id}")
-def update_item(name_id: int):
+def get_single_item(name_id: int):
     for game in game_list:
         if game["id"] == name_id:
             return game 
 
-    return {"detail": "Item Not Found"}
+    raise HTTPException(status_code= status.HTTP_404_NOT_FOUND)
 
 @app.get("/names")
 def search_items(q: Annotated[str | None, Query(min_length=2, max_length=50)] = None):
@@ -44,7 +45,7 @@ def search_items(q: Annotated[str | None, Query(min_length=2, max_length=50)] = 
         return [item for item in game_list if q in item["name"]]
     return game_list
 
-@app.post("/names")
+@app.post("/names", status_code= status.HTTP_201_CREATED)
 def create_item(name):
     new_item = {"id": random.randint(4, 100), "name": name}
     game_list.append(new_item)
@@ -53,19 +54,19 @@ def create_item(name):
 
 
 @app.put("/names/{name_id}")
-def update_item(name_id: int, name:str):
+def get_single_item(name_id: int, name:str):
     for game in game_list:
         if game["id"] == name_id:
             game["name"] = name
             return game
         
-    return {"detail": "Item Not Found"}
+    raise HTTPException(status_code= status.HTTP_404_NOT_FOUND)
 
-@app.delete("/names/{name_id}")
+@app.delete("/names/{name_id}", status_code= status.HTTP_204_NO_CONTENT)
 def delete_item(name_id: int):
     for game in game_list:
         if game["id"] == name_id:
             game_list.remove(game)
-            return {"detail": "Item Deleted"}
+            return JSONResponse(content= {"detail": "Item Deleted"}, status_code= status.HTTP_200_OK)
         
-    return {"detail": "Item Not Found"}
+    raise HTTPException(status_code= status.HTTP_404_NOT_FOUND)
